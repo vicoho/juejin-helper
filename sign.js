@@ -11,6 +11,18 @@ async function signIn() {
     }
     const API = new JuejinHttp(cookie)
     const isCheckIn = await API.queryTodayStatus()
+    const userInfo = await API.queryUserProfile()
+    if (userInfo && userInfo.user_name) {
+      const { user_name } = userInfo
+      const userNameLength = user_name.length
+      const startIndex = Math.floor(userNameLength / 3)
+      const endIndex = Math.ceil((2 * userNameLength) / 3)
+      const encryptedUserName =
+        user_name.slice(0, startIndex) +
+        '*'.repeat(endIndex - startIndex) +
+        user_name.slice(endIndex)
+      console.log('当前登录用户:', encryptedUserName)
+    }
     let lotteryName = ''
     if (isCheckIn) {
       console.log(`今日已签到`)
@@ -19,7 +31,6 @@ async function signIn() {
       await API.handleCheckIn()
       console.log(`签到成功`)
     }
-    const userInfo = await API.queryUserProfile()
     const { free_count } = await API.queryLotteryConfig()
     if (!free_count) {
       console.log(`今日已免费抽奖`)

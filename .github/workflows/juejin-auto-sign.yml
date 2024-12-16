@@ -1,38 +1,42 @@
-name: juejin-auto-sign
+name: sign
 permissions:
   contents: write
 on:
-  watch:
-    types: [starred]
   schedule:
     # 执行两次 避免偶尔执行失败的情况出现
-    - cron: '15 22 * * *'
-    - cron: '30 23 * * *'
-  push:
-    branches:
-      - main
-      - master
+    - cron: '15 22 * * *' # 早上6:15执行
+    - cron: '30 23 * * *' # 早上7:30执行
+  workflow_dispatch:
+    inputs:
+      job_name:
+        description: The name of the job to run
+        required: false
+        default: sign
 
   # pull_request:
   # branches: [ master,main ]
 
 jobs:
   build:
+    if: github.event_name == 'schedule'  || github.event.inputs.job_name == 'sign'
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
         with:
           repository: 'Wiederhoeft/juejin-helper'
           branch: main
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
+      - name: setup-node
+        uses: actions/setup-node@v4
         with:
-          version: 7
+          node-version: 22
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.4
           run_install: false
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
       - name: run script
         env:
           USER_COOKIE: ${{ secrets.USER_COOKIE }}
@@ -41,5 +45,6 @@ jobs:
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
           USER_EMAIL: ${{ secrets.USER_EMAIL }}
+          BASE_URL: ${{ secrets.BASE_URL }}
         run: |
           node index.js

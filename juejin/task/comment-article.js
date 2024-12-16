@@ -5,6 +5,7 @@ const JuejinHttp = require('../api')
 const { getArticleList, saveComments } = require('../common')
 const { insertTo, dbGet } = require('../../utils/db')
 const config = require('../../config')
+const { chatCompletion } = require('../../utils/chatCompletion')
 const { getRandomInt } = require('./../../utils/index')
 
 async function articleComment(task) {
@@ -38,17 +39,18 @@ async function articleComment(task) {
   for (let i = 0; i < times; i++) {
     const article = articles[i] || false
     if (!article) break
-    const { article_id, title } = article.article_info
+    const { article_id, article_info } = article
     await saveComments(article_id, 2)
-    const newDbComments = await dbGet('/comments/article')
-    const comments = defaultComments.concat(newDbComments || [])
-    const index = getRandomInt(0, comments.length - 1)
-    const words = _.sample(defaultComments)
-    const comment = await API.articleCommentAdd(article_id, words)
-    // 删除评论
-    if (!config.user.privacy) await API.articleCommentRemove(comment.comment_id)
+    const { brief_content = '', title = '' } = article_info
+    if (brief_content.length > 0 && title.length > 0) {
+      const completion = await chatCompletion(title + brief_content)
+      const comments = defaultComments.concat([completion] || [])
+      const index = getRandomInt(0, comments.length - 1)
+      const comment = await API.articleCommentAdd(article_id, comments[index])
+      // 删除评论
+      if (!config.user.privacy) await API.articleCommentRemove(comment.comment_id)
+    }
+    console.log(`评论文章 done`)
   }
-  console.log(`评论文章 done`)
 }
-
 module.exports = articleComment

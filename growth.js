@@ -5,11 +5,18 @@ const { handleTask } = require('./juejin/task')
 const { sendEmail } = require(`./utils/email`)
 const config = require('./config/index')
 
+async function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
 async function growth() {
   try {
     const cookie = await getCookie()
     const API = new JuejinHttp(cookie)
-    const { growth_tasks = {} } = await API.getTaskList()
+    await sleep(3000)
+    const { today_jscore = 0, growth_tasks = {} } = await API.getTaskList()
     const data = Object.values(growth_tasks)
     let taskHasDone = 0
     for (const items of data) {
@@ -22,7 +29,6 @@ async function growth() {
       }
     }
 
-    const { today_jscore } = await API.getTaskList()
     console.log(`成长任务已完成, 今日掘友分+${today_jscore}`)
     if (taskHasDone > 0) {
       await sendEmail({

@@ -3,19 +3,18 @@ const axios = require('axios')
 // https://developer.hitokoto.cn/sentence/#%E7%AE%80%E4%BB%8B
 // 一言  随机句子
 async function getHitokotoWords() {
-  return new Promise(async (r) => {
-    const defaultWords = `最近大环境好像真的很差哎，以前简历找我的都是一大堆，现在寥寥无几`
-    const res = await axios.get('https://v1.hitokoto.cn/').catch((error) => {
-      return r(defaultWords)
-    })
-    if (res.status == 200) {
-      const data = res.data
-      if (data && data.hitokoto) {
-        return r(data.hitokoto)
-      }
+  try {
+    const response = await fetch('https://nakoruru.h7ml.cn/proxy/v1.hitokoto.cn/')
+
+    if (!response) {
+      throw new Error('Network response was not ok')
     }
-    return r(defaultWords)
-  })
+    const data = await response.json()
+    return data.hitokoto
+  } catch (error) {
+    console.error('Error:', error)
+    return null
+  }
 }
 
 module.exports = {

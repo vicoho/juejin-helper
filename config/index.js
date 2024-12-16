@@ -7,7 +7,7 @@ module.exports = {
         user: process.env.EMAIL_USER, // 你的邮箱账号
         pass: process.env.EMAIL_PASS, // 你的邮箱 smpt 授权码
       },
-      host: process.env.EMAIL_HOST ?? `smtp.${process.env.EMAIL_USER.split('@')[1]}`, // 你的邮箱服务器地址 如 smtp.qq.com 可以传入指定服务器。如果没有指定服务器，将根据你的邮箱自动选择服务器
+      host: process.env.EMAIL_HOST ? `smtp.${process.env.EMAIL_USER.split('@')[1]}` : 'smtp.qq.com', // 你的邮箱服务器地址 如 smtp.qq.com 可以传入指定服务器。如果没有指定服务器，将根据你的邮箱自动选择服务器
       secure: true,
       port: 465,
       secureConnection: true,

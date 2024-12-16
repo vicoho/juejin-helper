@@ -1,94 +1,57 @@
 const axios = require('axios')
 const _ = require('lodash')
 
-const types = ['today', 'history', 'categoryList', 'hot', 'search']
-const acttypes = ['one', 'two', 'today', 'beforetoday', 'yestoday', 'week']
-async function getInterviewHot() {
-  return new Promise(async (resolve) => {
-    const defaultInterviewHot = [
-      {
-        title: '使用canvas绘制一个扇形',
-        issuesId: 0,
-        label: 'html',
-        count: 1,
+const accessToken = 'Z2hwX2VtNHEwZXZJUGlVOHllMWF1bHBMU1BsektVV0c4RzE2ZmxJQ2p1ZWppbg=='
+
+async function fetchLabels() {
+  try {
+    const response = await fetch('https://api.github.com/repos/haizlin/fe-interview/labels', {
+      headers: {
+        Authorization: `token ${atob(accessToken).replace('juejin', '')}`,
       },
-      {
-        title: '页面导入样式时，使用link和@import有什么区别？',
-        issuesId: 1,
-        label: 'html',
-        count: 136,
-      },
-      {
-        title: '圣杯布局和双飞翼布局的理解和区别，并用代码实现',
-        issuesId: 2,
-        label: 'css',
-        count: 57,
-      },
-      {
-        title: '用递归算法实现，数组长度为5且元素的随机数在2-32间不重复的值',
-        issuesId: 3,
-        label: 'js',
-        count: 504,
-      },
-      {
-        title: 'html的元素有哪些（包含H5）？',
-        issuesId: 4,
-        label: 'html',
-        count: 57,
-      },
-      {
-        title: 'CSS3有哪些新增的特性？',
-        issuesId: 5,
-        label: 'css',
-        count: 40,
-      },
-      {
-        title: '写一个方法去掉字符串中的空格',
-        issuesId: 6,
-        label: 'js',
-        count: 160,
-      },
-      {
-        title: 'HTML全局属性(global attribute)有哪些（包含H5）？',
-        issuesId: 7,
-        label: 'html',
-        count: 30,
-      },
-      {
-        title: '在页面上隐藏元素的方法有哪些？',
-        issuesId: 8,
-        label: 'css',
-        count: 48,
-      },
-      {
-        title: '去除字符串中最后一个指定的字符',
-        issuesId: 9,
-        label: 'js',
-        count: 137,
-      },
-      {
-        title: 'HTML5的文件离线存储怎么使用，工作原理是什么？',
-        issuesId: 10,
-        label: 'html',
-        count: 27,
-      },
-      {
-        title: 'CSS选择器有哪些？哪些属性可以继承？',
-        issuesId: 11,
-        label: 'css',
-        count: 26,
-      },
-    ]
-    const url = `http://api.h-camel.com/api?mod=interview&ctr=issues&act=${_.sample(types)}`
-    const res = await axios.get(url).catch((error) => {
-      return resolve(defaultInterviewHot)
     })
-    if (res.status == 200) {
-      const re = res.data.result || res.data.result.rows || res.data.result[acttypes]
-      return resolve(re)
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
     }
-    return resolve(defaultInterviewHot)
-  })
+
+    const data = await response.json()
+    const labelNames = data.map((label) => label.name)
+    return labelNames
+  } catch (error) {
+    console.error('There was a problem with the fetch operation:', error)
+    throw error // 可以选择继续抛出错误
+  }
+}
+
+async function fetchIssues(label) {
+  try {
+    const response = await fetch(
+      `https://api.github.com/repos/haizlin/fe-interview/issues?labels=${label}`,
+      {
+        headers: {
+          Authorization: `token ${atob(accessToken).replace('juejin', '')}`,
+        },
+      },
+    )
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok')
+    }
+
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('There was a problem with the fetch operation:', error)
+    throw error // 可以选择继续抛出错误
+  }
+}
+
+async function getInterviewHot() {
+  const types = await fetchLabels()
+  const label = types[Math.floor(Math.random() * (types.length + 1))]
+  const issues = await fetchIssues(label)
+  return issues
 }
 
 module.exports = {
